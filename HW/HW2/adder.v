@@ -12,7 +12,7 @@ xor AorB(axorb, a, b);
 xor outp(out, carryin, axorb);
 and ab_(ab, a, b);
 and (abcarryin, axorb, carryin);
-or (carryout, acarryin, ab);
+or (carryout, abcarryin, ab);
 
 endmodule
 
