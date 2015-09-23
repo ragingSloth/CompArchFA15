@@ -33,6 +33,8 @@ wire out;
 //behavioralMultiplexer mux (out, address0,address1, in0,in1,in2,in3);
 structuralMultiplexer mux (out, address0,address1, in0,in1,in2,in3);
 initial begin
+    $dumpfile("mux.vcd");
+    $dumpvars(0, testMultiplexer);
     $display("A0 A1 I0 I1 I2 I3 | Out | Expected");
     address0=0;address1=0;in0=0;in1=0;in2=0;in3=0; #1000
     $display("%b  %b  %b  %b  %b  %b | %b   | 0", address0, address1, in0, in1, in2, in3, out);

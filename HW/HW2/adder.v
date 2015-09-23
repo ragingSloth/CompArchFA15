@@ -23,6 +23,8 @@ wire sum, carryout;
 structuralFullAdder adder (sum, carryout, a, b, carryin);
 
 initial begin
+    $dumpfile("adder.vcd");
+    $dumpvars(0, testFullAdder);
     $display("A B Cin | Sum Cout | Expected");
     a=0;b=0;carryin=0; #1000
     $display("%b %b %b   | %b   %b    | 0, 0", a, b, carryin, sum, carryout);
