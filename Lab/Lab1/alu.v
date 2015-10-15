@@ -10,7 +10,7 @@ module ALU
 );
 
     wire[31:0] xoro, ando, nando, noro, oro, add, sub, slt;
-    wire cadd, oadd, csub, osub, csub_sel, cadd_sel, osub_sel, oadd_sel, neg_zero, zero_acc;
+    wire cadd, oadd, csub, osub, csub_sel, cadd_sel, osub_sel, oadd_sel;
     or32 op_or(operandA, operandB, oro);
     and32 op_and(operandA, operandB, ando);
     xor32 op_xor(operandA, operandB, xoro);
@@ -25,8 +25,10 @@ module ALU
     end
     endgenerate
     xor slt_bit(slt[0], overflow, sub[31]);
-    or #320 set_negzero(neg_zero, xoro[0], xoro[1], xoro[2], xoro[3], xoro[4], xoro[5], xoro[6], xoro[7], xoro[8], xoro[9], xoro[10], xoro[11], xoro[12], xoro[13], xoro[14], xoro[15], xoro[16], xoro[17], xoro[18], xoro[19], xoro[20], xoro[21], xoro[22], xoro[23], xoro[24], xoro[25], xoro[26], xoro[27], xoro[28], xoro[29], xoro[30], xoro[31]);
-    not #10 set_zero(zero_acc, neg_zero);
+
+    wire sub_zero, add_zero, zero_acc;
+    nor #320 set_sub_zero(sub_zero, xoro[0], xoro[1], xoro[2], xoro[3], xoro[4], xoro[5], xoro[6], xoro[7], xoro[8], xoro[9], xoro[10], xoro[11], xoro[12], xoro[13], xoro[14], xoro[15], xoro[16], xoro[17], xoro[18], xoro[19], xoro[20], xoro[21], xoro[22], xoro[23], xoro[24], xoro[25], xoro[26], xoro[27], xoro[28], xoro[29], xoro[30], xoro[31]);
+    nor #320 set_add_zero(add_zero, add[0], add[1], add[2], add[3], add[4], add[5], add[6], add[7], add[8], add[9], add[10], add[11], add[12], add[13], add[14], add[15], add[16], add[17], add[18], add[19], add[20], add[21], add[22], add[23], add[24], add[25], add[26], add[27], add[28], add[29], add[30], add[31]);
     xor #20 (slt[0], osub, sub[0]);
 
     wire neg_lsb, neg_msb, neg_mb, add_zero_ok, sub_zero_ok;
@@ -42,8 +44,8 @@ module ALU
     and #40 osub_allowed(osub_sel, osub, command[0], neg_msb, neg_mb);
     or #20 oout(overflow, oadd_sel, osub_sel);
 
-    and #40 zero_allowed_add(add_zero_ok, zero_acc, neg_lsb, neg_msb, neg_mb);
-    and #40 zero_allowed_sub(sub_zero_ok, zero_acc, command[0], neg_msb, neg_mb);
+    and #40 zero_allowed_add(add_zero_ok, add_zero, neg_lsb, neg_msb, neg_mb);
+    and #40 zero_allowed_sub(sub_zero_ok, sub_zero, command[0], neg_msb, neg_mb);
     or #20 zero_actual(zero, add_zero_ok, sub_zero_ok);
 
     MUX multi(command, add, sub, xoro, slt, ando, nando, noro, oro, result);
@@ -67,7 +69,7 @@ module FullAdderNbit
     end
     endgenerate
     fullAdder adder3(sum[N-1], carryout, a[N-1], b[N-1], carry[N-2]);
-    or #20 orgate(overflow, carryout, carry[N-2]);
+    xor #20 orgate(overflow, carryout, carry[N-2]);
 endmodule
 
 module subtractorNbit
@@ -96,7 +98,7 @@ module subtractorNbit
     end
     endgenerate
     fullAdder adder3(sum[N-1], carryout, a[N-1], negated[N-1], carry[N-2]);
-    or #20 orgate(overflow, carryout, carry[N-2]);
+    xor #20 orgate(overflow, carryout, carry[N-2]);
 endmodule
 
 module fullAdder(
@@ -243,8 +245,10 @@ module test;
     ALU alu(result, co, zero, ofl, opa, opb, command);
     xor32 xorop(opa, opb, xoro);
     initial begin
-        opa=32'd298;opb=32'd298;command=7; #100000
-        $display("%d", result);
+        opa=298;opb=-298;command=0; #100000
+        $display("%b", result);
+        $display("%b", opa);
+        $display("%b", opb);
         $display("%b", co);
         $display("%b", zero);
         $display("%b", ofl);
