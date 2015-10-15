@@ -10,12 +10,12 @@ module ALU
 );
 
     wire[31:0] xoro, ando, nando, noro, oro, add, sub, slt;
-    wire cadd, oadd, csub, osub, neg_lsb, csub_sel, cadd_sel, osub_sel, oadd_sel;
-    or32 op_or(oro, operandA, operandB);
-    and32 op_and(ando, operandA, operandB);
-    xor32 op_xor(xoro, operandA, operandB);
-    nor32 op_nor(noro, operandA, operandB);
-    nand32 op_nand(nando, operandA, operandB);
+    wire cadd, oadd, csub, osub, csub_sel, cadd_sel, osub_sel, oadd_sel, neg_zero, zero_acc;
+    or32 op_or(operandA, operandB, oro);
+    and32 op_and(operandA, operandB, ando);
+    xor32 op_xor(operandA, operandB, xoro);
+    nor32 op_nor(operandA, operandB, noro);
+    nand32 op_nand(operandA, operandB, nando);
     FullAdderNbit adder(operandA, operandB, add, cadd, oadd);
     subtractorNbit subb(operandA, operandB, sub, csub, osub);
     generate
@@ -25,15 +25,27 @@ module ALU
     end
     endgenerate
     xor slt_bit(slt[0], overflow, sub[31]);
-    or #320 set_zero(zero, xoro[0], xoro[1], xoro[2], xoro[3], xoro[4], xoro[5], xoro[6], xoro[7], xoro[8], xoro[9], xoro[10], xoro[11], xoro[12], xoro[13], xoro[14], xoro[15], xoro[16], xoro[17], xoro[18], xoro[19], xoro[20], xoro[21], xoro[22], xoro[23], xoro[24], xoro[25], xoro[26], xoro[27], xoro[28], xoro[29], xoro[30], xoro[31]);
+    or #320 set_negzero(neg_zero, xoro[0], xoro[1], xoro[2], xoro[3], xoro[4], xoro[5], xoro[6], xoro[7], xoro[8], xoro[9], xoro[10], xoro[11], xoro[12], xoro[13], xoro[14], xoro[15], xoro[16], xoro[17], xoro[18], xoro[19], xoro[20], xoro[21], xoro[22], xoro[23], xoro[24], xoro[25], xoro[26], xoro[27], xoro[28], xoro[29], xoro[30], xoro[31]);
+    not #10 set_zero(zero_acc, neg_zero);
     xor #20 (slt[0], osub, sub[0]);
+
+    wire neg_lsb, neg_msb, neg_mb, add_zero_ok, sub_zero_ok;
     not #10 neg_sel_lsb(neg_lsb, command[0]);
-    and #20 caddNneglsb(cadd_sel, cadd, neg_lsb);
-    and #20 csubNlsb(csub_sel, csub, command[0]);
-    and #20 oaddNneglsb(oadd_sel, oadd, neg_lsb);
-    and #20 osubNlsb(osub_sel, osub, command[0]);
+    not #10 neg_sel_lsb(neg_msb, command[0]);
+    not #10 neg_sel_lsb(neg_mb, command[1]);
+
+    and #40 cadd_allowed(cadd_sel, cadd, neg_lsb, neg_msb, neg_mb);
+    and #40 csub_allowed(csub_sel, csub, command[0], neg_msb, neg_mb);
     or #20 cout(carryout, cadd_sel, csub_sel);
+
+    and #40 oadd_allowed(oadd_sel, oadd, neg_lsb, neg_msb, neg_mb);
+    and #40 osub_allowed(osub_sel, osub, command[0], neg_msb, neg_mb);
     or #20 oout(overflow, oadd_sel, osub_sel);
+
+    and #40 zero_allowed_add(add_zero_ok, zero_acc, neg_lsb, neg_msb, neg_mb);
+    and #40 zero_allowed_sub(sub_zero_ok, zero_acc, command[0], neg_msb, neg_mb);
+    or #20 zero_actual(zero, add_zero_ok, sub_zero_ok);
+
     MUX multi(command, add, sub, xoro, slt, ando, nando, noro, oro, result);
 endmodule
 
@@ -71,7 +83,7 @@ module subtractorNbit
     wire[N-1:0] negated;
     generate
     genvar i;
-    for (i=0; i<N; i=i+1) begin: sub_negate
+    for (i=0; i<32; i=i+1) begin: sub_negate
         not #10 neg(negated[i], b[i]);
     end
     endgenerate
@@ -226,12 +238,16 @@ endmodule
 module test;
     reg[31:0] opa, opb;
     reg[2:0] command;
-    wire[31:0] result;
+    wire[31:0] result, xoro;
     wire co, ofl, zero;
     ALU alu(result, co, zero, ofl, opa, opb, command);
+    xor32 xorop(opa, opb, xoro);
     initial begin
-        opa=289;opb=598;command=4; #100000
-        $display("%b", result);
+        opa=32'd298;opb=32'd298;command=7; #100000
+        $display("%d", result);
+        $display("%b", co);
+        $display("%b", zero);
+        $display("%b", ofl);
     end
 endmodule
 //module testMux;

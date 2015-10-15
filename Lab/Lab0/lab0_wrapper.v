@@ -91,6 +91,7 @@ endmodule
 //   Challenge: write your own interface module instead of using this one.
 //--------------------------------------------------------------------------------
 
+
 module lab0_wrapper
 (
     input        clk,
