@@ -124,18 +124,46 @@ output reg		Clk
   end
 
   // Test Case 2: 
-  //   Write '15' to register 2, verify with Read Ports 1 and 2
-  //   (Fails with example register file, but should pass with yours)
-  WriteRegister = 5'd2;
-  WriteData = 32'd15;
-  RegWrite = 1;
-  ReadRegister1 = 5'd2;
-  ReadRegister2 = 5'd2;
-  #5 Clk=1; #5 Clk=0;
-
-  if((ReadData1 != 15) || (ReadData2 != 15)) begin
-    dutpassed = 0;
+  WriteData = 32'd2;
+  RegWrite = 0;
+  #5 Clk=1; #5 Clk=0;	// Generate single clock pulse
+  if((ReadData1 != 42) || (ReadData2 != 42)) begin
+    dutpassed = 0;	// Set to 'false' on failure
     $display("Test Case 2 Failed");
+  end
+
+  //Test Case 3:
+  RegWrite = 1;
+  ReadRegister1 = 5'd3;
+  ReadRegister2 = 5'd4;
+  #5 Clk=1; #5 Clk=0;
+  if((ReadData1 != 32'bx) || (ReadData2 != 32'bx)) begin
+    dutpassed = 0;	// Set to 'false' on failure
+    $display("Test Case 3 Failed");
+  end
+
+  //Test Case 4:
+  WriteRegister=5'd0;
+  ReadRegister1 = 5'd0;
+  ReadRegister2 = 5'd0;
+  #5 Clk=1; #5 Clk=0;
+  if((ReadData1 != 32'b0) || (ReadData2 != 32'b0)) begin
+    dutpassed = 0;	// Set to 'false' on failure
+    $display("Test Case 4 Failed");
+  end
+
+  //Test Case 5:
+  WriteRegister=5'd17;
+  WriteData=32'd4444;
+  ReadRegister1 = 5'd17;
+  ReadRegister2 = 5'd31;
+  #5 Clk=1; #5 Clk=0;
+  WriteRegister=5'd31;
+  WriteData=32'd5555;
+  #5 Clk=1; #5 Clk=0;
+  if((ReadData1 != 32'd4444) || (ReadData2 != 32'd5555) || (ReadData1 == ReadData2)) begin
+    dutpassed = 0;	// Set to 'false' on failure
+    $display("Test Case 5 Failed");
   end
 
 
