@@ -1,11 +1,3 @@
-//------------------------------------------------------------------------
-// Shift Register
-//   Parameterized width (in bits)
-//   Shift register can operate in two modes:
-//      - serial in, parallel out
-//      - parallel in, serial out
-//------------------------------------------------------------------------
-
 module shiftregister
 #(parameter width = 8)
 (
@@ -17,16 +9,16 @@ input               serialDataIn,       // Load shift reg serially
 output [width-1:0]  parallelDataOut,    // Shift reg data contents
 output              serialDataOut       // Positive edge synchronized
 );
-
+ 
     reg [width-1:0]      shiftregistermem;
-    assign serialDataOut = shiftregistermem[width-1];
-    assign parallelDataOut = shiftregistermem;
     always @(posedge clk) begin
-        if (peripheralClkEdge == 1 && parallelLoad == 0) begin
+        if (peripheralClkEdge == 1) begin
             shiftregistermem <= {shiftregistermem[width-2:0], serialDataIn};
         end
         if (parallelLoad == 1) begin
             shiftregistermem <= parallelDataIn;
         end
     end
+    assign serialDataOut = shiftregistermem[width-1];
+    assign parallelDataOut = shiftregistermem;
 endmodule

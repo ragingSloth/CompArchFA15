@@ -38,16 +38,22 @@ module testshiftregister();
         $display("%b", serialDataOut);
         serialDataIn=0; #20
         $display("%b", parallelDataOut);
+        $display("%b", serialDataOut);
         serialDataIn=0; #20
         $display("%b", parallelDataOut);
+        $display("%b", serialDataOut);
         serialDataIn=0; #20
         $display("%b", parallelDataOut);
+        $display("%b", serialDataOut);
         serialDataIn=0; #20
         $display("%b", parallelDataOut);
+        $display("%b", serialDataOut);
         serialDataIn=0; #20
         $display("%b", parallelDataOut);
+        $display("%b", serialDataOut);
         serialDataIn=0; #20
         $display("%b", parallelDataOut);
+        $display("%b", serialDataOut);
         serialDataIn=0; #20
         $display("%b", parallelDataOut);
         $display("%b", serialDataOut);
