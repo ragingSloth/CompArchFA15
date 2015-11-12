@@ -23,7 +23,7 @@ module datamemory
     reg [width-1:0] memory [depth-1:0];
 
     always @(posedge clk) begin
-        if(writeEnable)
+        if(writeEnable == 1)
             memory[address] <= dataIn;
         dataOut <= memory[address];
     end

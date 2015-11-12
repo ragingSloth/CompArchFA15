@@ -27,7 +27,7 @@ module spiMemory
     //fsm state(ccs, p_out[0], csclk, sr_wre, reset, dm_wre, address_wre, miso_en);
     datamemory mem(clk, d_out, address, dm_wre, p_out);
     //fsm state(ccs, p_out[0], csclk, sr_wre, dm_wre, address_wre, miso_en);
-    fsm state(ccs, p_out[0], pos_sclk, sr_wre, dm_wre, address_wre, miso_en);
+    fsm state(clk, ccs, p_out[0], pos_sclk, sr_wre, dm_wre, address_wre, miso_en);
     shiftregister #(8) sr(clk, pos_sclk, sr_wre, d_out, cmosi, p_out, s_out);
     always @(posedge clk) begin
         if (address_wre==1) begin
@@ -48,6 +48,7 @@ endmodule
 
 module fsm
 (
+    input clk,
     input cs,
     input register_lsb,
     input sclk,
@@ -57,120 +58,109 @@ module fsm
     output reg address_wre,
     output reg miso
 );
-    reg [2:0] count, state;
-    initial begin
-        sr_wre = 0;
-        dm_wre = 0;
-        address_wre = 0;
-        miso=0;
-    end
-    always @(negedge cs) begin
-        count = 0;
-        state = 0;
-        sr_wre = 0;
-        dm_wre = 0;
-        address_wre = 0;
-        miso=0;
-    end
-    always @(posedge sclk) begin
-        case (state)
-            3'd0: 
-                begin 
-                    sr_wre = 0;
-                    dm_wre = 0;
-                    address_wre = 0;
-                    miso=0;
-                    if (count == 7) begin
-                        count = 0;
-                        state = 1;
-                        address_wre = 1;
-                    end
-                    else begin
-                        count = count + 1;
-                    end
-                end
-            3'd1:
-                begin
-                    sr_wre = 0;
-                    dm_wre = 0;
-                    miso=0;
-                    address_wre = 0;
-                    if (register_lsb == 1) begin
-                        //assign reset <= 1;
-                        sr_wre = 1;
-                        miso=1;
-                        state = 4;
-                    end
-                    else begin
-                        state = 5;
-                    end
-                end
-            3'd2:
-                begin
-                    sr_wre = 0;
-                    dm_wre = 0;
-                    address_wre = 0;
-                    miso=0;
-                    state = 3;
-                end
-            3'd3:
-                begin
-                    sr_wre = 1;
-                    miso=1;
-                    dm_wre = 0;
-                    address_wre = 0;
-                    state = 4;
-                end
-            3'd4:
-                begin
-                    sr_wre = 0;
-                    dm_wre = 0;
-                    address_wre = 0;
-                    if (count == 7) begin
-                        count = 0;
-                        state = 7;
-                        miso = 0;
-                    end
-                    else begin
-                        count = count + 1;
-                    end
-                end
-            3'd5:
-                begin
-                    sr_wre = 0;
-                    dm_wre = 0;
-                    address_wre = 0;
-                    miso=0;
-                    if (count == 7) begin
+    reg [3:0] count, state;
+    initial sr_wre = 0;
+    initial dm_wre = 0;
+    initial address_wre = 0;
+    initial miso=0;
+    initial count = 0;
+    always @(posedge clk) begin
+        if (cs == 1) begin
+            count = 0;
+            state = 0;
+            sr_wre = 0;
+            dm_wre = 0;
+            address_wre = 0;
+            miso=0;
+        end
+        else begin
+            if (sclk == 1) begin
+                count = count + 1;
+            end
+            case (state)
+                3'd0: 
+                    begin 
+                        sr_wre = 0;
                         dm_wre = 0;
+                        address_wre = 0;
+                        miso=0;
+                        if (count == 8) begin
+                            count = 0;
+                            state = 1;
+                        end
+                    end
+                3'd1:
+                    begin
+                        sr_wre = 0;
+                        dm_wre = 0;
+                        miso=0;
+                        address_wre = 1;
+                        if (register_lsb == 1) begin
+                            //assign reset <= 1;
+                            state = 2;
+                        end
+                        else begin
+                            state = 5;
+                            count = 0;
+                        end
+                    end
+                3'd2:
+                    begin
+                        sr_wre = 0;
+                        dm_wre = 0;
+                        address_wre = 0;
+                        miso=0;
+                        state = 3;
+                    end
+                3'd3:
+                    begin
+                        sr_wre = 1;
+                        miso=0;
+                        dm_wre = 0;
+                        address_wre = 0;
+                        state = 4;
                         count = 0;
-                        state = 6;
                     end
-                    if (count == 6) begin
-                        dm_wre = 1;
-                        count = count + 1;
+                3'd4:
+                    begin
+                        sr_wre = 0;
+                        dm_wre = 0;
+                        miso=1;
+                        address_wre = 0;
+                        if (count == 8) begin
+                            count = 0;
+                            state = 7;
+                        end
                     end
-                    else begin
-                        count = count + 1;
+                3'd5:
+                    begin
+                        sr_wre = 0;
+                        dm_wre = 0;
+                        address_wre = 0;
+                        miso=0;
+                        if (count == 8) begin
+                            dm_wre = 1;
+                            state = 6;
+                        end
                     end
-                end
-            3'd6:
-                begin
-                    sr_wre = 0;
-                    dm_wre = 0;
-                    address_wre = 0;
-                    miso=0;
-                    state = 7;
-                end
-            3'd7:
-                begin
-                    sr_wre = 0;
-                    dm_wre = 0;
-                    address_wre = 0;
-                    miso=0;
-                    //assign reset <= 1;
-                end
-        endcase
+                3'd6:
+                    begin
+                        sr_wre = 0;
+                        dm_wre = 0;
+                        address_wre = 0;
+                        miso=0;
+                        state = 7;
+                    end
+                3'd7:
+                    begin
+                        sr_wre = 0;
+                        dm_wre = 0;
+                        address_wre = 0;
+                        miso=0;
+                        //assign reset <= 1;
+                    end
+            endcase
+        end
     end
 endmodule
 
@@ -179,6 +169,7 @@ module test();
     wire [3:0] leds;
     initial clk = 0;
     initial sclk = 0;
+    initial cs = 1;
     wire miso;
     spiMemory spi(clk, sclk, cs, miso, mosi, fault, leds);
     always #1  clk=!clk;
@@ -187,6 +178,7 @@ module test();
         $dumpfile("spi.vcd");
         $dumpvars(0, test);
         fault =0;
+        cs = 1; #150
         cs = 0;
         mosi = 1; #100 
         mosi = 1; #100
