@@ -1,0 +1,5 @@
+In the input conditioner schematic the unclear section is an or gate connected to the outputs of the two and gates driving the clock line on a d flipflop. The data line is driven the output of the third flipflop.
+
+Also, both schematics use gates as the unit, which is incorrect. However the scanner is broken, so I can't change this. 
+
+Finally, in the clock divider schematicthe unclear text on the right side is, top to bottom, "operational", "of 50% at a frequency", and generated"
